@@ -3,17 +3,23 @@
 # set working directory (home project folder)
 setwd("E:/BIOL398_Patch_Reef_Residency/")
 
+# associated github repo: 
+# https://github.com/CourtneyStuart/FL_Patch_Reefs
+
 # data directories
 # joined reef fish (abundance, presence/absence, etc.) and patch reef (area,
 # perimeter, P:A ratio, distance to reef/mangrove, etc.) data exported from
 # ArcGIS
 data_wd = "E:/BIOL398_Patch_Reef_Residency/Tabular_Data/"
 
+# for saving data to github
+git_data = "E:/BIOL398_Patch_Reef_Residency/GitHub/FL_Patch_Reefs/Data/"
+
+# for saving figures to github
+git_figs = "E:/BIOL398_Patch_Reef_Residency/GitHub/FL_Patch_Reefs/Figures/"
+
 # temporary directory (for intermediate/temporary products or checks)
 temp_wd = "E:/BIOL398_Patch_Reef_Residency/Temporary/"
-
-# saving figures
-fig_wd = "E:/BIOL398_Patch_Reef_Residency/Figures/"
 
 # install packages
 #install.packages(c("conflicted", "tidyverse", "ggplot2", "PNWColors", "readxl",
@@ -48,6 +54,10 @@ str(lg)
 # use View if you want to open the entire data frame, or click the name of
 # the data frame in the global environment
 #View(lg)
+
+# save the raw data to github so we have a safe copy there
+write.csv(lg, paste0(git_data, "Subadult_Gray_Snapper_Patch_Reef_Data.csv"),
+          row.names = FALSE)
 
 # first, let's do some data prep and cleaning to make the data frame easier
 # to work with
@@ -90,7 +100,7 @@ lg$Object_ID = seq.int(nrow(lg))
 # environmental conditions at patch reefs that had multiple surveys around them)
 lg = lg %>% 
   group_by(Patch_ID) %>% 
-  sample_n(1) %>%
+  sample_n(1) %>% # select one record at random per patch reef
   ungroup()
 lg = as.data.frame(lg)
 
@@ -128,7 +138,7 @@ hist(lg$BPI_Broad)
 # fine-scale BPI was evaluated using concentric rings of 5 m and 125 m
 hist(lg$BPI_Fine)
 
-# based on my first chapter, which modeled habitat suitability for sub-adult
+# based on my first MSc chapter, which modeled habitat suitability for sub-adult
 # gray snapper and bluestriped grunt across the seascape, broad-scale BPI was a 
 # much stronger predictor of suitability than fine-scale BPI. also, as we can see
 # in these histograms, fine-scale BPI takes on only a few values when examined
@@ -141,7 +151,7 @@ hist(lg$BPI_Fine)
 # example increasing temperature and/or salinity results in lower dissolved oxygen. 
 # salinity and temperature data are also easier to collect/access. Also, previous
 # research has revealed significant inter-species variation in response to 
-# salinity and temperature, so these are of potential ecological revelance to 
+# salinity and temperature, so these are of potential ecological relevance to 
 # our patch reef study. 
 
 # let's exclude some variables and create a new data frame of only those
@@ -161,7 +171,7 @@ str(lg_vars)
 # collinearity (or multicollinearity, when more than two variables are 
 # highly correlated) can distort model interpretations, coefficient 
 # estimates, and levels of significance. as a rule of thumb, we'll use
-# pearson pairwise correlation (r) threshold of |0.7| (abs). 
+# pearson pairwise correlation (r) threshold of |0.7|. 
 
 # first we'll create a full correlation matrix from all variables
 lg_cormat = cor(lg_vars, use = "complete.obs")
@@ -170,7 +180,7 @@ lg_cormat = cor(lg_vars, use = "complete.obs")
 palette = pnw_palette("Shuksan2", 200, type = "continuous")
 
 # set plotting margins
-par(mar=c(0,0,0,0))
+par(mar = c(0,0,0,0))
 
 # full correlation plot
 corrplot(lg_cormat, method = "color", col = palette, type = "upper",
@@ -178,7 +188,7 @@ corrplot(lg_cormat, method = "color", col = palette, type = "upper",
          number.digits = 2, tl.col = "black", tl.srt = 40, tl.cex = 0.8)
 
 # save full correlation plot as a png
-Cairo(file = paste0(fig_wd, "Correlation_Full_Predictor_Set.png"), 
+Cairo(file = paste0(git_figs, "Correlation_Full_Predictor_Set.png"), 
       bg = "white", type = "png", units = "in", width = 6, 
       height = 6, pointsize = 12, dpi = 300)
 par(mar=c(0,0,0,0))
@@ -199,7 +209,7 @@ lg_corr # check correlation results
 # VIF measures how much the behavior (variance) of a variable is influenced
 # by it's interaction with other variables. VIF allows a quick measure of how
 # much a variable is contributing to the standard error in the regression. we
-# want to keep standard errors as small as possible, so we will use a standard
+# want to keep standard errors as small as possible, so we will use a 
 # VIF threshold of 5.
 
 # the vifstep function runs through all pairs of variables in the lg_vars
@@ -215,18 +225,18 @@ cor(lg_vars$StDev_Depth, lg_vars$Slope,  use = "complete")
 # yes, they're extremely positively correlated. In this case, we will retain
 # slope as suggested.
 
-# what about the suggestion to remove patch area? this is likely due to 
-# correlation between patch area and patch perimeter...
-cor(lg_vars$Patch_Area, lg_vars$Patch_Perimeter)
-# once again, these variables display strong positive correlation. However,
-# in this case, patch area may be a more ecologically relevant predictor.
-# this is because we assume that reef fish are more likely to respond to
-# patch area than perimeter. so we will retain patch area and remove patch 
-# perimeter in the next step, hopefully this will resolve the issue.
+# what about the suggestion to remove patch perimeter? this is likely due to 
+# correlation between patch perimeter and patch area...
+cor(lg_vars$Patch_Perimeter, lg_vars$Patch_Area)
+# once again, these variables display strong positive correlation. In this case,
+# patch area may be a more ecologically relevant predictor because we assume that 
+# reef fish are more likely to respond to the overall area of a patch reef compared
+# to its perimeter. so we will retain patch area and remove patch perimeter in 
+# the next step, hopefully this will resolve the issue.
 
 # finally, what about seagrass area within a 500 m buffer? this is possibly 
 # correlated with either area of coral & hardbottom or unconsolidated sediment
-cor(lg_vars$Area_SG, lg_vars$Area_CRHB) # below our threshold
+cor(lg_vars$Area_SG, lg_vars$Area_CRHB) # below our |0.7| threshold
 cor(lg_vars$Area_SG, lg_vars$Area_US) # strong negative correlation
 # here, area of surrounding seagrass is what we're more so interested in, 
 # because this can serve as a proxy for available prey (where gray snapper
@@ -245,7 +255,7 @@ corrplot(lg_cormat2, method = "color", col = palette, type = "upper",
          number.digits = 2, tl.col = "black", tl.srt = 40, tl.cex = 0.8)
 
 # save reduced correlation plot as a png
-Cairo(file = paste0(fig_wd, "Correlation_Reduced_Predictor_Set.png"), 
+Cairo(file = paste0(git_figs, "Correlation_Reduced_Predictor_Set.png"), 
       bg = "white", type = "png", units = "in", width = 6, 
       height = 6, pointsize = 12, dpi = 300)
 par(mar=c(0,0,0,0))
@@ -254,7 +264,7 @@ corrplot(lg_cormat2, method = "color", col = palette, type = "upper",
          number.digits = 2, tl.col = "black", tl.srt = 40, tl.cex = 0.75)
 dev.off()
 
-# check correlation again
+# check correlation again just to make sure there are no other issues
 lg_corr2 = vifcor(lg_vars2, th = 0.7)
 lg_corr2
 
@@ -265,7 +275,7 @@ lg_vif2
 # reset ploting margins 
 par(mar=c(2.5, 2.5, 2.5, 2.5))
 
-# no outstanding multicollinearity issues! let's create and save some
+# no outstanding collinearity problems! let's create and save some
 # data frames with these variables. first, a data frame with all rows.
 lg_full = lg %>%
   select(-Curvature, -Plan_Curve, -Rugosity, -BPI_Fine,
@@ -279,14 +289,14 @@ lg_full = lg_full[lg_random, ]
 # now randomly split data into two subsets: one for model calibration (70%)
 # and one for model validation (30%)
 lg_train_id = sample(seq_len(nrow(lg_full)), size = floor(0.70*nrow(lg_full)))  
-lg_train = lg_full[lg_train_id,] # creates the training dataset (70%)
-lg_test = lg_full[-lg_train_id,]  # creates the test dataset (30%)
+lg_train = lg_full[lg_train_id,] # creates the training subset (70%)
+lg_test = lg_full[-lg_train_id,]  # creates the testing subset (30%)
 
-# let's save these data frames as csv files 
-write.csv(lg_train, paste0(data_wd, "Subadult_Gray_Snapper_Model_Calibration_Data.csv"),
+# let's save these data frames as csv files in our github repo
+write.csv(lg_train, paste0(git_data, "Subadult_Gray_Snapper_Model_Calibration_Data.csv"),
           row.names = FALSE)
 
-write.csv(lg_test, paste0(data_wd, "Subadult_Gray_Snapper_Model_Validation_Data.csv"),
+write.csv(lg_test, paste0(git_data, "Subadult_Gray_Snapper_Model_Validation_Data.csv"),
           row.names = FALSE)
 
 #### SUBADULT BLUESTRIPED GRUNT (Haemulon sciurus) ####
@@ -300,6 +310,10 @@ str(hs)
 # use View if you want to open the entire data frame, or click the name of
 # the data frame in the global environment
 #View(hs)
+
+# save the raw data to github so we have a safe copy there
+write.csv(hs, paste0(git_data, "Subadult_Bluestriped_Grunt_Patch_Reef_Data.csv"),
+          row.names = FALSE)
 
 # first, let's do some data prep and cleaning to make the data frame easier
 # to work with
@@ -332,8 +346,8 @@ hs = hs %>%
   # in the output dataframe 
   select(5:9, 59, 58, 11:12, 52, 3, 14, 57, 15:28, 47:49, 51, 53, 55:56)
 
-# we DO NOT have to repeat the correlation assessment because all gray 
-# snapper and bluestriped grunt data come from the SAME EXACT surveys.
+# we DO NOT need to repeat the correlation assessment because the gray 
+# snapper and bluestriped grunt data came from the SAME EXACT surveys & sites.
 # so if we were to repeat the correlation and VIF tests, we would get 
 # identical results! instead, jump ahead to saving the modeling datasets:
 # full, calibration, and validation. 
@@ -357,9 +371,9 @@ hs_train = hs_full %>%
 hs_test = hs_full %>%
   filter(Object_ID %in% lg_test$Object_ID)
 
-# save these data as csv files for modeling
-write.csv(hs_train, paste0(data_wd, "Subadult_Bluestriped_Grunt_Model_Calibration_Data.csv"),
+# save these data as csv files in our github repo for modeling
+write.csv(hs_train, paste0(git_data, "Subadult_Bluestriped_Grunt_Model_Calibration_Data.csv"),
           row.names = FALSE)
 
-write.csv(hs_test, paste0(data_wd, "Subadult_Bluestriped_Grunt_Model_Validation_Data.csv"),
+write.csv(hs_test, paste0(git_data, "Subadult_Bluestriped_Grunt_Model_Validation_Data.csv"),
           row.names = FALSE)
