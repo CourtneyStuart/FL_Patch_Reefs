@@ -30,7 +30,7 @@ hs$Species = "Haemulon sciurus"
 nb_results = rbind(lg, hs)
 
 # color palette
-my_pal = pnw_palette("Bay",8)
+my_pal = pnw_palette("Bay",9)
 
 nb_results = nb_results %>% 
   dplyr::filter(Covariates != "Intercept")
@@ -46,7 +46,7 @@ irr_plot = ggplot(data = nb_results,
   scale_color_manual(values = c(my_pal[1], my_pal[5])) +
   scale_fill_manual(values = c(my_pal[1], my_pal[5])) +
   labs(x = "Incident Rate Ratio",
-       y = "Covariate") + xlim(-1, 10) +
+       y = "Covariate") +
   theme_bw() + 
   theme(legend.position = "top", legend.title = element_blank(),
         panel.border = element_rect(color = "black"), 
