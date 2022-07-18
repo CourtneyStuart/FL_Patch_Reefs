@@ -63,16 +63,16 @@ hs_test = hs_test %>%
 
 # keep only columns of interest for modeling
 lg_train = lg_train %>%
-  select(Count, 13:26) # Count is the response & 13:26 is the range of predictor columns
+  select(Count, 12:26) # Count is the response & 12:26 is the range of predictor columns
 
 lg_test = lg_test %>%
-  select(Count, 13:26)
+  select(Count, 12:26)
 
 hs_train = hs_train %>%
-  select(Count, 13:26)
+  select(Count, 12:26)
 
 hs_test = hs_test %>%
-  select(Count, 13:26)
+  select(Count, 12:26)
 
 
 #### modeling ####
@@ -113,11 +113,11 @@ pchisq(lg_pois$deviance, df = lg_pois$df.residual, lower.tail = FALSE)
 # overdispersion is likely a problem, let's use the following code to check the 
 # null hypothesis of equidispersion
 dispersiontest(lg_pois, trafo = 1, alternative = "greater") 
-# slight evidence of overdispersion (p-value approaching significance of 0.05)
+# evidence of overdispersion (p-value < significance level of 0.05)
 
 
 # It's worth trying to fit a negative binomial regression to address this issue.
-lg_nb = glm.nb(Count ~ ., data = lg_train, control = glm.control(maxit = 15))
+lg_nb = glm.nb(Count ~ ., data = lg_train)
 summary(lg_nb)
 
 
@@ -165,12 +165,12 @@ pchisq(hs_pois$deviance, df = hs_pois$df.residual, lower.tail = FALSE)
 # overdispersion is likely a problem, let's use the following code to check the 
 # null hypothesis of equidispersion
 dispersiontest(hs_pois, trafo = 1, alternative = "greater") 
-# strong evidence of overdispersion (p-value much smaller than 0.05)
+#  evidence of overdispersion (p-value < significance level 0.05)
 
 
 # negative binomial regression for HS
 # line for lg: lg_nb = glm.nb(Count ~ ., data = lg_train, control = glm.control(maxit = 15))
-hs_nb = glm.nb(Count ~ ., data = hs_train, control = glm.control(maxit = 15))
+hs_nb = glm.nb(Count ~ ., data = hs_train)
 summary(hs_nb)
 
 
@@ -214,7 +214,7 @@ lg_nb_coef = as.data.frame(lg_nb$coefficients) %>%
   mutate(Covariates = c("Intercept", "Mangrove_Dist", "Reef_Dist", "Depth", 
                       "Slope", "BPI_Broad", "Mean_Sum_Temp", "Mean_Sum_Sal", 
                       "Mean_Win_Temp", "Mean_Win_Sal", "Patch_Area", "PA_Ratio", 
-                      "Patch_Neigh_Dist", "Area_CRHB", "Area_SG")) %>%
+                      "Patch_Neigh_Dist", "Area_CRHB", "Area_SG", "Pred_Density")) %>%
   select(Covariates, Coefficients) # negative binomial coefficients
 
 # add exponentiated incident rate ratios and CIs
@@ -223,7 +223,7 @@ lg_nb_exp = as.data.frame(lg_nb_exp$coeftable) %>%
   mutate(Covariates = c("Intercept", "Mangrove_Dist", "Reef_Dist", "Depth", 
                         "Slope", "BPI_Broad", "Mean_Sum_Temp", "Mean_Sum_Sal", 
                         "Mean_Win_Temp", "Mean_Win_Sal", "Patch_Area", "PA_Ratio", 
-                        "Patch_Neigh_Dist", "Area_CRHB", "Area_SG"))
+                        "Patch_Neigh_Dist", "Area_CRHB", "Area_SG", "Pred_Density"))
   
 lg_nb_table = merge(lg_nb_coef, lg_nb_exp, by = "Covariates")
 
@@ -263,6 +263,19 @@ lg_predictions$Within_Five =
 lg_within_five_accuracy = (sum(lg_predictions$Within_Five)/as.numeric(nrow(lg_predictions))) * 100
 
 
+# save predictions for mapping 
+lg_map_pred = lg_test %>%
+  mutate(Observed_Count = lg_test$Count) %>%
+  mutate(Predicted_Count = round(lg_test$nb_Predicted, digits = 0)) %>%
+  mutate(Correct_Prediction = ifelse(Observed_Count == Predicted_Count, 1, 0)) %>%
+  mutate(Within_Five = ifelse((abs(Observed_Count - Predicted_Count) <= 5), 1, 0))
+
+# we need to bring back in the lat/long data for mapping
+lg_map_pred2 = cbind(
+  (read.csv("https://raw.githubusercontent.com/CourtneyStuart/FL_Patch_Reefs/main/Data/Subadult_Gray_Snapper_Model_Validation_Data.csv")), 
+  lg_map_pred)
+  
+
 #  bluestriped grunt NB model 
 summary(hs_nb)
 
@@ -273,7 +286,7 @@ hs_nb_coef = as.data.frame(hs_nb$coefficients) %>%
   mutate(Covariates = c("Intercept", "Mangrove_Dist", "Reef_Dist", "Depth", 
                         "Slope", "BPI_Broad", "Mean_Sum_Temp", "Mean_Sum_Sal", 
                         "Mean_Win_Temp", "Mean_Win_Sal", "Patch_Area", "PA_Ratio", 
-                        "Patch_Neigh_Dist", "Area_CRHB", "Area_SG")) %>%
+                        "Patch_Neigh_Dist", "Area_CRHB", "Area_SG", "Pred_Density")) %>%
   select(Covariates, Coefficients) # negative binomial coefficients
 
 # add exponentiated incident rate ratios and 95% CIs
@@ -282,7 +295,7 @@ hs_nb_exp = as.data.frame(hs_nb_exp$coeftable) %>%
   mutate(Covariates = c("Intercept", "Mangrove_Dist", "Reef_Dist", "Depth", 
                         "Slope", "BPI_Broad", "Mean_Sum_Temp", "Mean_Sum_Sal", 
                         "Mean_Win_Temp", "Mean_Win_Sal", "Patch_Area", "PA_Ratio", 
-                        "Patch_Neigh_Dist", "Area_CRHB", "Area_SG"))
+                        "Patch_Neigh_Dist", "Area_CRHB", "Area_SG", "Pred_Density"))
 
 hs_nb_table = merge(hs_nb_coef, hs_nb_exp, by = "Covariates")
 
@@ -319,6 +332,16 @@ hs_predictions$Within_Five =
 # by the total number of predictions, and multiplying by 100
 hs_within_five_accuracy = (sum(hs_predictions$Within_Five)/as.numeric(nrow(hs_predictions))) * 100
 
+# save predictions for mapping 
+hs_map_pred = hs_test %>%
+  mutate(Observed_Count = hs_test$Count) %>%
+  mutate(Predicted_Count = round(hs_test$nb_Predicted, digits = 0)) %>%
+  mutate(Correct_Prediction = ifelse(Observed_Count == Predicted_Count, 1, 0)) %>%
+  mutate(Within_Five = ifelse((abs(Observed_Count - Predicted_Count) <= 5), 1, 0))
+
+hs_map_pred2 = cbind(
+  (read.csv("https://raw.githubusercontent.com/CourtneyStuart/FL_Patch_Reefs/main/Data/Subadult_Bluestriped_Grunt_Model_Validation_Data.csv")), 
+  hs_map_pred)
 
 #### saving the outputs ####
 
@@ -339,6 +362,14 @@ write.csv(hs_nb_table,
           paste0(data_wd, "Subadult_Bluestriped_Grunt_Negative_Binomial_Results.csv"),
           row.names = FALSE)
 
+# validation predictions for mapping spatial accuracy
+write.csv(lg_map_pred2,
+          paste0(data_wd, "Subadult_Gray_Snapper_Negative_Binomial_Map_Predictions.csv"),
+          row.names = FALSE)
+
+write.csv(hs_map_pred2,
+          paste0(data_wd, "Subadult_Bluestriped_Grunt_Negative_Binomial_Map_Predictions.csv"),
+          row.names = FALSE)
 
 # let's also prep these datasets for committing and pushing to our github repo
 # github repo folder local location 
