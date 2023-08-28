@@ -1,26 +1,26 @@
 #### SET-UP ####
 
 # set working directory (home project folder)
-setwd("E:/BIOL398_Patch_Reef_Residency/")
+setwd("G:/BIOL398_Patch_Reef_Residency/")
 
 # data directories
 # joined reef fish (abundance, presence/absence, etc.) and patch reef (area,
 # perimeter, P:A ratio, distance to reef/mangrove, etc.) data exported from
 # ArcGIS
-data_wd = "E:/BIOL398_Patch_Reef_Residency/Tabular_Data/"
+data_wd = "G:/BIOL398_Patch_Reef_Residency/Tabular_Data/"
 
 # temporary directory (for intermediate/temporary products or checks)
-temp_wd = "E:/BIOL398_Patch_Reef_Residency/Temporary/"
+temp_wd = "G:/BIOL398_Patch_Reef_Residency/Temporary/"
 
 # saving figures
-fig_wd = "E:/BIOL398_Patch_Reef_Residency/Figures/"
+fig_wd = "G:/BIOL398_Patch_Reef_Residency/Figures/"
 
 # github repo project
-git_wd = "E:/BIOL398_Patch_Reef_Residency/GitHub/FL_Patch_Reefs/"
+git_wd = "G:/BIOL398_Patch_Reef_Residency/GitHub/FL_Patch_Reefs/"
 
 # install packages
-#install.packages(c("conflicted", "tidyverse", "ggplot2", "PNWColors", "readxl",
-#"dplyr", "corrplot", "Cairo", "usdm", "ISLR"))
+install.packages(c("conflicted", "tidyverse", "ggplot2", "PNWColors", "readxl",
+"dplyr", "corrplot", "Cairo", "usdm", "ISLR"))
 
 # load packages
 library(easypackages) # lets you load more than one package at once
@@ -91,7 +91,7 @@ lg = lg %>%
          Depth, StDev_Depth, Slope, Curvature, Plan_Curve, BPI_Fine, 
          BPI_Broad, Rugosity, Mean_Sum_Temp, Mean_Sum_DO, Mean_Sum_Sal, 
          Mean_Win_Temp, Mean_Win_DO, Mean_Win_Sal, Patch_Area,
-         Patch_Perimeter, Patch_Neigh_Dist, Area_CRHB, Area_SG, Area_US, 
+         Patch_Perimeter, PA_Ratio, Patch_Neigh_Dist, Area_CRHB, Area_SG, Area_US, 
          Pred_Abundance, Pred_Density)
 
 # sort data by increasing latitude and then add a NEW object_id column based on 
@@ -243,10 +243,10 @@ cor(lg_vars$StDev_Depth, lg_vars$Slope,  use = "complete")
 # yes, they're extremely positively correlated. In this case, we will retain
 # slope as suggested.
 
-# what about the suggestion to remove patch area? this is likely due to 
-# correlation between patch area and patch perimeter...
+# what about the suggestion to remove patch perimeter? this is likely due to 
+# correlation between patch area and patch area
 cor(lg_vars$Patch_Area, lg_vars$Patch_Perimeter)
-# once again, these variables display strong positive correlation. However,
+# once again, these variables display strong positive correlation.
 # in this case, patch area may be a more ecologically relevant predictor.
 # this is because we assume that reef fish are more likely to respond to
 # patch area than perimeter. so we will retain patch area and remove patch 
@@ -257,7 +257,7 @@ cor(lg_vars$Patch_Area, lg_vars$Patch_Perimeter)
 cor(lg_vars$Area_SG, lg_vars$Area_CRHB) # below our threshold
 cor(lg_vars$Area_SG, lg_vars$Area_US) # strong negative correlation
 # here, area of surrounding seagrass is what we're more so interested in, 
-# because this can serve as a proxy for available prey (where gray snapper
+# because this can serve as a proxy for available prey (where fish
 # feed overnight). let's keep seagrass instead of unconsolidated sediments,
 # hopefully this resolves the issue. 
 
@@ -387,19 +387,27 @@ hs = hs %>%
          Depth, StDev_Depth, Slope, Curvature, Plan_Curve, BPI_Fine, 
          BPI_Broad, Rugosity, Mean_Sum_Temp, Mean_Sum_DO, Mean_Sum_Sal, 
          Mean_Win_Temp, Mean_Win_DO, Mean_Win_Sal, Patch_Area,
-         Patch_Perimeter, Patch_Neigh_Dist, Area_CRHB, Area_SG, Area_US, 
+         Patch_Perimeter, PA_Ratio, Patch_Neigh_Dist, Area_CRHB, Area_SG, Area_US, 
          Pred_Abundance, Pred_Density)
+
+# sort data by increasing latitude and then add a NEW object_id column based on 
+# this sorting (these object_ids will match those above for gray snapper)
+hs = hs[order(hs$Lat_M),]
+hs$Object_ID = seq.int(nrow(hs))
+
+# keep only one survey per unique patch reef (so as to not over-represent any
+# environmental conditions at patch reefs that had multiple surveys around them)
+hs = hs %>% 
+  group_by(Patch_ID) %>% 
+  sample_n(1) %>%
+  ungroup()
+hs = as.data.frame(hs)
 
 # we DO NOT have to repeat the correlation assessment because all gray 
 # snapper and bluestriped grunt data come from the SAME EXACT surveys.
 # so if we were to repeat the correlation and VIF tests, we would get 
 # identical results! instead, jump ahead to saving the modeling datasets:
 # full, calibration, and validation. 
-
-# sort data by increasing latitude and then add a NEW object_id column based on 
-# this sorting (these object_ids will match those above for gray snapper)
-hs = hs[order(hs$Lat_M),]
-hs$Object_ID = seq.int(nrow(hs))
 
 # now create a new data frame that stores only the variables retained for modeling
 hs_full = hs %>%
