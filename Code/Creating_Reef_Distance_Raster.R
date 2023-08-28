@@ -6,13 +6,13 @@ setwd("Z:/Courtney/Stuart_MSc_Ch1/")
 data_wd = "Z:/Courtney/Stuart_MSc_Ch1/Spatial_Predictors/"
 
 # saving data to our patch reef GIS folder
-out_wd = "E:/BIOL398_Patch_Reef_Residency/GIS/Data/"
+out_wd = "G:/BIOL398_Patch_Reef_Residency/GIS/Data/"
 
 # load raster library
 libraries("raster")
 
 # change where large temp rasters are saved
-rasterOptions(tmpdir = "E:/BIOL398_Patch_Reef_Residency/Temporary/")
+rasterOptions(tmpdir = "G:/BIOL398_Patch_Reef_Residency/Temporary/")
 
 # save PROJ.4 string for standard projection (ESPG:26958 NAD 83/Florida East) 
 my_crs = CRS("+init=epsg:26958")
