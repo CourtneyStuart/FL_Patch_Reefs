@@ -63,16 +63,16 @@ hs_test = hs_test %>%
 
 # keep only columns of interest for modeling
 lg_train = lg_train %>%
-  select(Count, 12:26) # Count is the response & 12:26 is the range of predictor columns
+  select(Count, 12:27) # Count is the response & 12:26 is the range of predictor columns
 
 lg_test = lg_test %>%
-  select(Count, 12:26)
+  select(Count, 12:27)
 
 hs_train = hs_train %>%
-  select(Count, 12:26)
+  select(Count, 12:27)
 
 hs_test = hs_test %>%
-  select(Count, 12:26)
+  select(Count, 12:27)
 
 
 #### modeling ####
@@ -211,7 +211,7 @@ summary(lg_nb)
 # coefficients to get the incidence rate ratios
 lg_nb_coef = as.data.frame(lg_nb$coefficients) %>%
   mutate(Coefficients = lg_nb$coefficients) %>%
-  mutate(Covariates = c("Intercept", "Mangrove_Dist", "Reef_Dist", "Depth", 
+  mutate(Covariates = c("Intercept", "Habitat", "Mangrove_Dist", "Reef_Dist", "Depth", 
                       "Slope", "BPI_Broad", "Mean_Sum_Temp", "Mean_Sum_Sal", 
                       "Mean_Win_Temp", "Mean_Win_Sal", "Patch_Area", "PA_Ratio", 
                       "Patch_Neigh_Dist", "Area_CRHB", "Area_SG", "Pred_Density")) %>%
@@ -220,7 +220,7 @@ lg_nb_coef = as.data.frame(lg_nb$coefficients) %>%
 # add exponentiated incident rate ratios and CIs
 lg_nb_exp = summ(lg_nb, exp = T)
 lg_nb_exp = as.data.frame(lg_nb_exp$coeftable) %>% 
-  mutate(Covariates = c("Intercept", "Mangrove_Dist", "Reef_Dist", "Depth", 
+  mutate(Covariates = c("Intercept", "Habitat", "Mangrove_Dist", "Reef_Dist", "Depth", 
                         "Slope", "BPI_Broad", "Mean_Sum_Temp", "Mean_Sum_Sal", 
                         "Mean_Win_Temp", "Mean_Win_Sal", "Patch_Area", "PA_Ratio", 
                         "Patch_Neigh_Dist", "Area_CRHB", "Area_SG", "Pred_Density"))
@@ -283,7 +283,7 @@ summary(hs_nb)
 # coefficients to get the incidence rate ratios
 hs_nb_coef = as.data.frame(hs_nb$coefficients) %>%
   mutate(Coefficients = hs_nb$coefficients) %>%
-  mutate(Covariates = c("Intercept", "Mangrove_Dist", "Reef_Dist", "Depth", 
+  mutate(Covariates = c("Intercept", "Habitat", "Mangrove_Dist", "Reef_Dist", "Depth", 
                         "Slope", "BPI_Broad", "Mean_Sum_Temp", "Mean_Sum_Sal", 
                         "Mean_Win_Temp", "Mean_Win_Sal", "Patch_Area", "PA_Ratio", 
                         "Patch_Neigh_Dist", "Area_CRHB", "Area_SG", "Pred_Density")) %>%
@@ -292,7 +292,7 @@ hs_nb_coef = as.data.frame(hs_nb$coefficients) %>%
 # add exponentiated incident rate ratios and 95% CIs
 hs_nb_exp = summ(hs_nb, exp = T)
 hs_nb_exp = as.data.frame(hs_nb_exp$coeftable) %>% 
-  mutate(Covariates = c("Intercept", "Mangrove_Dist", "Reef_Dist", "Depth", 
+  mutate(Covariates = c("Intercept", "Habitat", "Mangrove_Dist", "Reef_Dist", "Depth", 
                         "Slope", "BPI_Broad", "Mean_Sum_Temp", "Mean_Sum_Sal", 
                         "Mean_Win_Temp", "Mean_Win_Sal", "Patch_Area", "PA_Ratio", 
                         "Patch_Neigh_Dist", "Area_CRHB", "Area_SG", "Pred_Density"))
@@ -350,7 +350,7 @@ hs_map_pred2 = cbind(
 # as a csv file to our external hard drive
 
 # save our output file location (only need to do this once)
-data_wd = "E:/BIOL398_Patch_Reef_Residency/Tabular_Data/"
+data_wd = "G:/BIOL398_Patch_Reef_Residency/Tabular_Data/"
 
 # save csv for gray snapper
 write.csv(lg_nb_table,
@@ -373,7 +373,7 @@ write.csv(hs_map_pred2,
 
 # let's also prep these datasets for committing and pushing to our github repo
 # github repo folder local location 
-git_wd = "E:/BIOL398_Patch_Reef_Residency/GitHub/FL_Patch_Reefs/Data/"
+git_wd = "G:/BIOL398_Patch_Reef_Residency/GitHub/FL_Patch_Reefs/Data/"
 
 # save csv for gray snapper
 write.csv(lg_nb_table,
