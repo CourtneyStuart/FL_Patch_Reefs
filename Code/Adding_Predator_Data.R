@@ -23,10 +23,10 @@ conflicted::conflict_prefer("filter", "dplyr")
 conflicted::conflict_prefer("distinct", "dplyr")
 
 # set working directory (home project folder)
-setwd("E:/BIOL398_Patch_Reef_Residency/")
+setwd("G:/BIOL398_Patch_Reef_Residency/")
 
 # save path to our data folder
-data_wd = "E:/BIOL398_Patch_Reef_Residency/Tabular_Data/"
+data_wd = "G:/BIOL398_Patch_Reef_Residency/Tabular_Data/"
 
 # save coordinate system information for our target projected CS and source
 # geographic CS
@@ -55,7 +55,7 @@ pred_spp = c("Caranx bartholomaei", "Caranx crysos", "Caranx ruber",
 # extract taxonomic information for predatory species
 pred_tax = rvc_tax %>%
   filter(SCINAME %in% pred_spp) %>%
-  tibble::add_column(SOURCE = "South Florida Reef Visual Census")
+  add_column(SOURCE = "South Florida Reef Visual Census")
 
 # extract observations of these predators from the rvc sample data
 pred_obs = rvc_samp %>%
@@ -181,7 +181,7 @@ final_sf_lg = left_join(st_drop_geometry(sf_lg),
 # save the new, updated dataset including information on predator
 # abundance and density as both spatial data shapefiles and csv tables
 st_write(st_as_sf(final_sf_lg, coords = c(56,57), crs = my_crs), 
-         dsn = "E:/BIOL398_Patch_Reef_Residency/GIS/Data/Subadult_Gray_Snapper_Patch_Reefs_w_Predator.shp",
+         dsn = "G:/BIOL398_Patch_Reef_Residency/GIS/Data/Subadult_Gray_Snapper_Patch_Reefs_w_Predator.shp",
          driver = "ESRI Shapefile", append = F)
 
 write.csv(final_sf_lg, 
@@ -233,7 +233,7 @@ final_sf_hs = left_join(st_drop_geometry(sf_hs),
 # save the new, updated dataset including information on predator
 # abundance and density as both spatial shapefile and csv table
 st_write(st_as_sf(final_sf_hs, coords = c(56,57), crs = my_crs), 
-         dsn = "E:/BIOL398_Patch_Reef_Residency/GIS/Data/Subadult_Bluestriped_Grunt_Patch_Reefs_w_Predator.shp",
+         dsn = "G:/BIOL398_Patch_Reef_Residency/GIS/Data/Subadult_Bluestriped_Grunt_Patch_Reefs_w_Predator.shp",
          driver = "ESRI Shapefile", append = F)
 
 write.csv(final_sf_hs, 
