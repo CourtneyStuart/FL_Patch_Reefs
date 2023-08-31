@@ -24,6 +24,8 @@ conflicted::conflict_prefer("select", "dplyr")
 # set plot margins for later (only need to do this once)
 par(mar = c(4,4,2.1,2.1))
 
+# set seed to ensure reproducibility
+set.seed(123) 
 
 ##### data prep and exploration ####
 # read in the model calibration and evaluation data subsets from GitHub Repo
@@ -384,3 +386,4 @@ write.csv(lg_nb_table,
 write.csv(hs_nb_table,
           paste0(git_wd, "Subadult_Bluestriped_Grunt_Negative_Binomial_Results.csv"),
           row.names = FALSE)
+

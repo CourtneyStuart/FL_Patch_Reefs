@@ -9,7 +9,7 @@ data_wd = "Z:/Courtney/Stuart_MSc_Ch1/Spatial_Predictors/"
 out_wd = "G:/BIOL398_Patch_Reef_Residency/GIS/Data/"
 
 # load raster library
-libraries("raster")
+library("raster")
 
 # change where large temp rasters are saved
 rasterOptions(tmpdir = "G:/BIOL398_Patch_Reef_Residency/Temporary/")
