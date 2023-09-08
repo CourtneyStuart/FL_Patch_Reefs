@@ -395,13 +395,6 @@ hs = hs %>%
 hs = hs[order(hs$Lat_M),]
 hs$Object_ID = seq.int(nrow(hs))
 
-# keep only one survey per unique patch reef (so as to not over-represent any
-# environmental conditions at patch reefs that had multiple surveys around them)
-hs = hs %>% 
-  group_by(Patch_ID) %>% 
-  sample_n(1) %>%
-  ungroup()
-hs = as.data.frame(hs)
 
 # we DO NOT have to repeat the correlation assessment because all gray 
 # snapper and bluestriped grunt data come from the SAME EXACT surveys.
@@ -417,7 +410,7 @@ hs_full = hs %>%
 
 # now, use the object_id values stored in the gray snapper training and testing
 # dataframes to extract bluestriped grunt data from the same exact locations
-hs_train = hs_full %>% 
+hs_train = hs_full %>%
   filter(Object_ID %in% lg_train$Object_ID)
 
 hs_test = hs_full %>%
