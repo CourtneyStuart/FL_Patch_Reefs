@@ -30,7 +30,7 @@ conflicted::conflict_prefer("select", "dplyr")
 conflicted::conflict_prefer("filter", "dplyr")
 
 # set seed to ensure reproducibility
-set.seed(123)   
+set.seed(7)   
 
 # read in our data file, which stores reef fish data (species, life stage,
 # presence/absence, abundance, site info), corresponding environmental data

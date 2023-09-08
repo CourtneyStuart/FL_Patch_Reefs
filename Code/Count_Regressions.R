@@ -25,7 +25,7 @@ conflicted::conflict_prefer("select", "dplyr")
 par(mar = c(4,4,2.1,2.1))
 
 # set seed to ensure reproducibility
-set.seed(123) 
+set.seed(7) 
 
 ##### data prep and exploration ####
 # read in the model calibration and evaluation data subsets from GitHub Repo
@@ -65,7 +65,7 @@ hs_test = hs_test %>%
 
 # keep only columns of interest for modeling
 lg_train = lg_train %>%
-  select(Count, 12:27) # Count is the response & 12:26 is the range of predictor columns
+  select(Count, 12:27) # Count is the response & 12:27 is the range of predictor columns
 
 lg_test = lg_test %>%
   select(Count, 12:27)
