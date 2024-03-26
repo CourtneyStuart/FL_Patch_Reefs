@@ -27,7 +27,7 @@ par(mar = c(4,4,2.1,2.1))
 # set seed to ensure reproducibility
 set.seed(7) 
 
-##### data prep and exploration ####
+##### Data Prep and Exploration ####
 # read in the model calibration and evaluation data subsets from GitHub Repo
 
 # gray snapper (Lutjanus griseus (lg))
@@ -63,9 +63,9 @@ hs_test = hs_test %>%
   relocate(Count, .after = Abundance)
 
 
-# keep only columns of interest for modeling
+# keep only columns of interest for modeling, where count is the response & 12:27 is the range of predictor columns
 lg_train = lg_train %>%
-  select(Count, 12:27) # Count is the response & 12:27 is the range of predictor columns
+  select(Count, 12:27)
 
 lg_test = lg_test %>%
   select(Count, 12:27)
@@ -77,7 +77,7 @@ hs_test = hs_test %>%
   select(Count, 12:27)
 
 
-#### modeling ####
+#### Poisson and NB Model Fitting ####
 # Overview of Poisson Regression assumptions
 # 1. Poisson Response - the response variable is a count per unit of time or space,
 # described by a Poisson distribution. 
@@ -105,7 +105,7 @@ summary(lg_pois)
 
 # calculate the p-value for the deviance goodness of fit test --> calculate the 
 # probability to the right of the deviance value for the chi-squared distribution
-# on 157 degrees of freedom:
+# on 155 degrees of freedom:
 pchisq(lg_pois$deviance, df = lg_pois$df.residual, lower.tail = FALSE)
 
 # The null hypothesis is that our model is correctly specified. according to the 
@@ -113,12 +113,13 @@ pchisq(lg_pois$deviance, df = lg_pois$df.residual, lower.tail = FALSE)
 # hypothesis (suggesting a poor model fit). 
 
 # overdispersion is likely a problem, let's use the following code to check the 
-# null hypothesis of equidispersion
+# null hypothesis of equidispersion:
 dispersiontest(lg_pois, trafo = 1, alternative = "greater") 
 # evidence of overdispersion (p-value < significance level of 0.05)
 
 
-# It's worth trying to fit a negative binomial regression to address this issue.
+# Try fiting a negative binomial regression to address the issues of overdispersion
+# and mean =/= variance.
 lg_nb = glm.nb(Count ~ ., data = lg_train)
 summary(lg_nb)
 
@@ -147,7 +148,7 @@ pchisq(2 * (logLik(lg_nb) - logLik(lg_pois)), df = 1, lower.tail = FALSE)
 lrtest(lg_pois, lg_nb)
 
 # reject H0,  there is a statistically significant difference between the negative
-# binomial and poisson regressions, NB provides a better fit to the training data
+# binomial and poisson regressions, NB provides a better fit to the training data.
 
 # bluestriped grunt (HS) tests/models
 # poisson regression for HS
@@ -157,7 +158,7 @@ summary(hs_pois)
 
 # calculate the p-value for the deviance goodness of fit test --> calculate the 
 # probability to the right of the deviance value for the chi-squared distribution
-# on 157 degrees of freedom:
+# on 155 degrees of freedom:
 pchisq(hs_pois$deviance, df = hs_pois$df.residual, lower.tail = FALSE)
 
 # The null hypothesis is that our model is correctly specified. according to the 
@@ -165,13 +166,12 @@ pchisq(hs_pois$deviance, df = hs_pois$df.residual, lower.tail = FALSE)
 # hypothesis (suggesting a poor model fit). 
 
 # overdispersion is likely a problem, let's use the following code to check the 
-# null hypothesis of equidispersion
+# null hypothesis of equidispersion:
 dispersiontest(hs_pois, trafo = 1, alternative = "greater") 
 #  evidence of overdispersion (p-value < significance level 0.05)
 
 
 # negative binomial regression for HS
-# line for lg: lg_nb = glm.nb(Count ~ ., data = lg_train, control = glm.control(maxit = 15))
 hs_nb = glm.nb(Count ~ ., data = hs_train)
 summary(hs_nb)
 
@@ -199,10 +199,10 @@ pchisq(2 * (logLik(hs_nb) - logLik(hs_pois)), df = 1, lower.tail = FALSE)
 lrtest(hs_pois, hs_nb)
 
 # reject H0, there is a statistically significant difference between the negative
-# binomial and poisson regressions, NB provides a better fit to the training data
+# binomial and poisson regressions, NB provides a better fit to the training data.
 
 
-#### interpreting NB models ####
+#### Interpreting NB Models ####
 #install.packages("jtools")
 library(jtools)
 
@@ -345,7 +345,7 @@ hs_map_pred2 = cbind(
   (read.csv("https://raw.githubusercontent.com/CourtneyStuart/FL_Patch_Reefs/main/Data/Subadult_Bluestriped_Grunt_Model_Validation_Data.csv")), 
   hs_map_pred)
 
-#### saving the outputs ####
+#### Saving the Outputs ####
 
 # Saving the negative binomial coefficients, incident rate ratios (IRR - aka 
 # exponentiated coefficients), 95% confidence intervals around IRRs, and p-values
